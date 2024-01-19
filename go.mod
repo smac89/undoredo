@@ -1,3 +1,3 @@
 module github.com/smac89/undoredo
 
-go 1.18
+go 1.21
