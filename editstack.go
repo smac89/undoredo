@@ -45,9 +45,9 @@ type undoRedo[T any] struct {
 }
 
 var (
-	MaxUndoError = errors.New("maximum undo reached")
-	MaxRedoError = errors.New("maximum redo reached")
-	EmptyStack   = errors.New("stack is empty")
+	ErrUndoMax    = errors.New("maximum undo reached")
+	ErrRedoMax    = errors.New("maximum redo reached")
+	ErrEmptyStack = errors.New("stack is empty")
 )
 
 func NewEditStack[T any]() EditStack[T] {
@@ -86,7 +86,7 @@ func (u *undoRedo[T]) Len() int {
 
 func (u *undoRedo[T]) Peek() (T, error) {
 	if u.IsEmpty() {
-		return *new(T), EmptyStack
+		return *new(T), ErrEmptyStack
 	}
 	return u.currentData, nil
 }
@@ -105,7 +105,7 @@ func (u *undoRedo[T]) Pop() (T, error) {
 
 func (u *undoRedo[T]) Undo() (T, error) {
 	if !u.CanUndo() {
-		return *new(T), MaxUndoError
+		return *new(T), ErrUndoMax
 	}
 
 	u.size.undoSize--
@@ -119,7 +119,7 @@ func (u *undoRedo[T]) Undo() (T, error) {
 
 func (u *undoRedo[T]) Redo() (T, error) {
 	if !u.CanRedo() {
-		return *new(T), MaxRedoError
+		return *new(T), ErrRedoMax
 	}
 
 	u.size.redoSize--

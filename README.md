@@ -66,6 +66,10 @@ func main() {
 	data, _ = udrd.Peek()
 	println(data) // 5
 	_, err := udrd.Redo()
-	println(errors.Is(err, undoredo.MaxRedoError)) // true
+	println(errors.Is(err, undoredo.ErrRedoMax)) // true
 }
 ```
+
+### Future improvements
+- 🚀 Allow setting maximum stack size and implement eviction strategy
+- 🚀 Consider an array-based implementation which may help with eviction and saves memory

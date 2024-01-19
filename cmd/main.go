@@ -32,5 +32,5 @@ func main() {
 	data, _ = udrd.Peek()
 	println(data) // 5
 	_, err := udrd.Redo()
-	println(errors.Is(err, undoredo.MaxRedoError)) // true
+	println(errors.Is(err, undoredo.ErrRedoMax)) // true
 }
