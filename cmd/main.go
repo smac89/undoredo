@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-	// Your code goes here
 	udrd := undoredo.NewEditStack[int]()
 	udrd.Push(1)
 	udrd.Push(2)
@@ -25,6 +24,7 @@ func main() {
 	udrd.Undo()
 	udrd.Undo()
 	udrd.Undo()
+	println(udrd.CanRedo()) // true
 	udrd.Undo()
 	println(udrd.CanUndo()) // false
 	udrd.Push(5)

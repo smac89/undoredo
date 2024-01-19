@@ -1,4 +1,6 @@
 # undoredo
+[![Go Reference](https://pkg.go.dev/badge/github.com/smac89/undoredo.svg)](https://pkg.go.dev/github.com/smac89/undoredo)
+
 ![stacks](./docs/stacks.jpg)
 
 Robust implementation of a data structure which allows for recording changes and replaying them similar to how a text editor undo/redo history works
@@ -56,7 +58,7 @@ func main() {
 	udrd.Undo()
 	udrd.Undo()
 	udrd.Undo()
-    println(udrd.CanRedo()) // true
+	println(udrd.CanRedo()) // true
 	udrd.Undo()
 	println(udrd.CanUndo()) // false
 	udrd.Push(5)
