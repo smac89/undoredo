@@ -36,10 +36,10 @@ type undoRedoSize struct {
 	redoSize int
 }
 
-type undoRedo[T any] struct {
+type UndoRedo[T any] struct {
 	currentData T
-	previous    *undoRedo[T]
-	next        *undoRedo[T]
+	previous    *UndoRedo[T]
+	next        *UndoRedo[T]
 	hasData     bool
 	size        *undoRedoSize
 }
@@ -50,60 +50,67 @@ var (
 	ErrEmptyStack = errors.New("stack is empty")
 )
 
-func NewEditStack[T any]() EditStack[T] {
-	edStack := &undoRedo[T]{size: &undoRedoSize{}}
+var (
+	_ EditStack[any] = (*UndoRedo[any])(nil)
+)
+
+func NewUndoRedo[T any]() *UndoRedo[T] {
+	edStack := &UndoRedo[T]{size: &undoRedoSize{}}
 	return edStack
 }
 
-func (u *undoRedo[T]) IsEmpty() bool {
+func (u *UndoRedo[T]) IsEmpty() bool {
 	return u == nil || !u.hasData
 }
 
-func (u *undoRedo[T]) Clear() {
-	newStk := NewEditStack[T]()
-	*u = *(newStk.(*undoRedo[T]))
+func (u *UndoRedo[T]) Clear() {
+	newStk := NewUndoRedo[T]()
+	*u = *newStk
 }
 
-func (u *undoRedo[T]) CanUndo() bool {
-	return u.previous != nil
+func (u *UndoRedo[T]) CanUndo() bool {
+	return !u.IsEmpty()
 }
 
-func (u *undoRedo[T]) CanRedo() bool {
+func (u *UndoRedo[T]) CanRedo() bool {
 	return u.next != nil
 }
 
-func (u *undoRedo[T]) UndoSize() int {
+func (u *UndoRedo[T]) UndoSize() int {
 	return u.size.undoSize
 }
 
-func (u *undoRedo[T]) RedoSize() int {
+func (u *UndoRedo[T]) RedoSize() int {
 	return u.size.redoSize
 }
 
-func (u *undoRedo[T]) Len() int {
+func (u *UndoRedo[T]) Len() int {
 	return u.RedoSize() + u.UndoSize()
 }
 
-func (u *undoRedo[T]) Peek() (T, error) {
+func (u *UndoRedo[T]) Peek() (T, error) {
 	if u.IsEmpty() {
 		return *new(T), ErrEmptyStack
 	}
 	return u.currentData, nil
 }
 
-func (u *undoRedo[T]) Push(change T) {
-	prev := *u
-	*u = undoRedo[T]{previous: &prev, currentData: change, hasData: true, size: prev.size}
+func (u *UndoRedo[T]) Push(change T) {
+	res := *u
+	if u.previous != nil {
+		u.previous.next = &res
+	}
+	*u = UndoRedo[T]{previous: &res, currentData: change, hasData: true, size: res.size}
 	u.size.undoSize++
 	u.size.redoSize = 0
-	prev.next = u
+	res.next = u
 }
 
-func (u *undoRedo[T]) Pop() (T, error) {
+func (u *UndoRedo[T]) Pop() (T, error) {
 	return u.Undo()
 }
 
-func (u *undoRedo[T]) Undo() (T, error) {
+func (u *UndoRedo[T]) Undo() (T, error) {
 	if !u.CanUndo() {
 		return *new(T), ErrUndoMax
 	}
@@ -111,13 +118,17 @@ func (u *undoRedo[T]) Undo() (T, error) {
 	u.size.undoSize--
 	u.size.redoSize++
 	res := *u
+	if res.previous != nil {
+		res.previous.next = &res
+	}
+	if res.next != nil {
+		res.next.previous = &res
+	}
 	*u = *res.previous
-	u.next = &res
-	res.previous = u
-	return u.Peek()
+	return res.currentData, nil
 }
 
-func (u *undoRedo[T]) Redo() (T, error) {
+func (u *UndoRedo[T]) Redo() (T, error) {
 	if !u.CanRedo() {
 		return *new(T), ErrRedoMax
 	}
@@ -125,13 +136,17 @@ func (u *undoRedo[T]) Redo() (T, error) {
 	u.size.redoSize--
 	u.size.undoSize++
 	res := *u
+	if res.previous != nil {
+		res.previous.next = &res
+	}
+	if res.next != nil {
+		res.next.previous = &res
+	}
 	*u = *res.next
-	u.previous = &res
-	res.next = u
-	return u.Peek()
+	return u.currentData, nil
 }
 
-func (u *undoRedo[T]) UndoN(n int) ([]T, error) {
+func (u *UndoRedo[T]) UndoN(n int) ([]T, error) {
 	var (
 		undo  = u
 		undos = make([]T, 0)

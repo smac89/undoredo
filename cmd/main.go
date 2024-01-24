@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	udrd := undoredo.NewEditStack[int]()
+	udrd := undoredo.NewUndoRedo[int]()
 	udrd.Push(1)
 	udrd.Push(2)
 	udrd.Push(3)
@@ -15,9 +15,9 @@ func main() {
 	_, _ = udrd.Undo()
 	undo, _ = udrd.Undo()
 	redo, _ = udrd.Redo()
-	println(undo, redo) // 1 2
+	println(undo, redo) // 2 2
 	redo, _ = udrd.Redo()
-	println(undo, redo) // 1 3
+	println(undo, redo) // 2 3
 	udrd.Push(4)
 	data, _ = udrd.Peek()
 	println(data) // 4
