@@ -26,6 +26,8 @@ I present to you: `EditStack`
 | `RedoSize() int` | get the maximum number of redos that can be done |
 | `Len() int` | get the number of changes in the stack (undos + redos) |
 | `Clear()` | clear the edit stack. no undo or redo can be done after this |
+| `IterUndos(func (T) bool) error` | iterate the remaining undos |
+| `IterRedos(func (T) bool) error` | iterate the remaining redos |
 
 Other operations which can be generalized from the above:
 

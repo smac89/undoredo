@@ -29,6 +29,10 @@ type EditStack[T any] interface {
 	Clear()
 	// get the result of the last change to the stack
 	Peek() (T, error)
+	// iterate over undos
+	IterUndos(f func(T) bool) error
+	// iterate over redos
+	IterRedos(f func(T) bool) error
 }
 
 type undoRedoSize struct {
@@ -161,45 +165,81 @@ func (u *UndoRedo[T]) UndoN(n int) ([]T, error) {
 			break
 		}
 	}
-	if u.previous != nil {
-		u.previous.next = u.next
+	if n < 0 {
+		return undos, nil
 	}
-	if u.next != nil {
-		u.next.previous = u.previous
+	res := *u
+	if res.previous != nil {
+		res.previous.next = &res
 	}
-	*u = *undo
-	d, err := u.Undo()
+	if res.next != nil {
+		res.next.previous = &res
+	}
+	d, err := undo.Undo()
 	if err == nil {
 		undos = append(undos, d)
 	}
+	*u = *undo
 	return undos, err
 }
 
-func (u *undoRedo[T]) RedoN(n int) ([]T, error) {
+func (u *UndoRedo[T]) RedoN(n int) ([]T, error) {
 	var (
 		redo  = u
 		redos = make([]T, 0)
 	)
+	if n < 0 {
+		return redos, nil
+	}
 	for i := 0; i < n-1; i++ {
 		if redo.CanRedo() {
-			redos = append(redos, redo.currentData)
 			redo.size.redoSize--
 			redo.size.undoSize++
 			redo = redo.next
+			redos = append(redos, redo.currentData)
 		} else {
 			break
 		}
 	}
-	if u.previous != nil {
-		u.previous.next = u.next
+	res := *u
+	if res.previous != nil {
+		res.previous.next = &res
 	}
-	if u.next != nil {
-		u.next.previous = u.previous
+	if res.next != nil {
+		res.next.previous = &res
 	}
-	*u = *redo
-	d, err := u.Redo()
+	d, err := redo.Redo()
 	if err == nil {
 		redos = append(redos, d)
 	}
+	*u = *redo
 	return redos, err
+}
+
+func (u *UndoRedo[T]) IterUndos(f func(T) bool) error {
+	if !u.CanUndo() {
+		return ErrUndoMax
+	}
+	undo := u
+	for undo.CanUndo() {
+		if !f(undo.currentData) {
+			return nil
+		}
+		undo = undo.previous
+	}
+	return nil
+}
+
+func (u *UndoRedo[T]) IterRedos(f func(T) bool) error {
+	if !u.CanRedo() {
+		return ErrRedoMax
+	}
+	redo := u
+	for redo.CanRedo() {
+		redo = redo.next
+		if !f(redo.currentData) {
+			return nil
+		}
+	}
+	return nil
 }

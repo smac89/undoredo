@@ -226,3 +226,54 @@ func TestLenDoesNotChangeWithUndoOrRedo(t *testing.T) {
 		t.Error("expected stack size to remain at 10")
 	}
 }
+
+func TestClearRemovesAllChanges(t *testing.T) {
+	u := NewUndoRedo[int]()
+	for i := 0; i < 10; i++ {
+		u.Push(i + 1)
+	}
+	u.Clear()
+	if u.Len() != 0 {
+		t.Error("expected stack to be empty")
+	}
+	if u.UndoSize()+u.RedoSize() != 0 {
+		t.Error("expected undo/redo size to be 0")
+	}
+}
+
+func TestIterUndos(t *testing.T) {
+	u := NewUndoRedo[int]()
+	for i := 0; i < 10; i++ {
+		u.Push(i + 1)
+	}
+	var res []int
+	u.IterUndos(func(i int) bool {
+		if i > 5 {
+			res = append(res, i)
+			return true
+		}
+		return false
+	})
+	if !slices.Equal(res, []int{10, 9, 8, 7, 6}) {
+		t.Error("expected to have 10 9 8 7 6")
+	}
+}
+
+func TestIterRedos(t *testing.T) {
+	u := NewUndoRedo[int]()
+	for i := 0; i < 10; i++ {
+		u.Push(i + 1)
+	}
+	u.UndoN(u.UndoSize())
+	var res []int
+	u.IterRedos(func(i int) bool {
+		if i <= 5 {
+			res = append(res, i)
+			return true
+		}
+		return false
+	})
+	if !slices.Equal(res, []int{1, 2, 3, 4, 5}) {
+		t.Error("expected to have 1 2 3 4 5")
+	}
+}
