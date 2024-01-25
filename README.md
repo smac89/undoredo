@@ -76,4 +76,3 @@ func main() {
 
 ### Future improvements
 - 🚀 Allow setting maximum stack size and implement eviction strategy
-- 🚀 Consider an array-based implementation which may help with eviction and saves memory
