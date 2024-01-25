@@ -40,10 +40,11 @@ import (
 	"errors"
 
 	"github.com/smac89/undoredo"
+	"github.com/smac89/undoredo/pkg/errmsg"
 )
 
 func main() {
-	udrd := undoredo.NewUndoRedo[int]()
+	udrd := undoredo.NewUndoRedoStack[int]()
 	udrd.Push(1)
 	udrd.Push(2)
 	udrd.Push(3)
@@ -68,8 +69,9 @@ func main() {
 	data, _ = udrd.Peek()
 	println(data) // 5
 	_, err := udrd.Redo()
-	println(errors.Is(err, undoredo.ErrRedoMax)) // true
+	println(errors.Is(err, errmsg.ErrRedoMax)) // true
 }
+
 ```
 
 ### Future improvements
